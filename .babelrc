@@ -1,0 +1,17 @@
+{
+  "env": {
+    "test": {
+      "presets": [
+        ["env", {
+          "targets": { "node": "current" }
+        }],
+        "jest",
+        "react"
+      ],
+      "plugins": [
+        "transform-class-properties",
+        ["transform-object-rest-spread", { "useBuiltIns": true }]
+      ]
+    }
+  }
+}

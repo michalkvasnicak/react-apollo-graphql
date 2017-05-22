@@ -1,0 +1,7 @@
+src
+coverage
+*.test.js
+rollup.*
+.watchmanconfig
+.gitignore
+.flowconfig
