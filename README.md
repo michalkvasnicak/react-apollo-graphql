@@ -1,14 +1,18 @@
 # react-apollo-graphql
 
+[![CircleCI](https://circleci.com/gh/michalkvasnicak/react-apollo-graphql/tree/master.svg?style=svg&circle-token=20c4fae1b9bd62446eec2d27c334b154c06efc9a)](https://circleci.com/gh/michalkvasnicak/react-apollo-graphql/tree/master)
+
 This is opinionated replacement for `graphql` decorator from `react-apollo` package.
+
+`npm install --save react-apollo-graphql`
+
+**This package doesn't support server side render yet**.
 
 It provides:
 
 * simple error handling on the component level
 * readable passing of queries' results to your component
 * typed props and render props using flow type
-
-**This package doesn't support server side render yet**.
 
 ## Usage
 
