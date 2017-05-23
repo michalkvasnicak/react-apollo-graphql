@@ -40,7 +40,7 @@ type Props<Q: Queries, M: MutationsInitializers> = {
     >,
     mutations: $ObjMap<M, <V>((client: ApolloClient, ownProps: Object) => V) => V>,
     props: *,
-  ) => React$Element<*>,
+  ) => React$Element<any>,
 };
 
 type State = {
@@ -116,6 +116,9 @@ export default class GraphQL extends React.Component<void, Props<*, *>, State> {
       'Please specify apollo client using client prop or provide it using <ApolloProvider />.',
     );
   };
+
+  getObservers = (): Array<ObservableQuery<*>> =>
+    Object.keys(this.observers).map(key => this.observers[key]);
 
   componentWillUnmount() {
     this.hasMount = false;
