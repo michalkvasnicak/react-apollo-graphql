@@ -6,13 +6,12 @@ This is opinionated replacement for `graphql` decorator from `react-apollo` pack
 
 `npm install --save react-apollo-graphql`
 
-**This package doesn't support server side render yet**.
-
 It provides:
 
 * simple error handling on the component level
 * readable passing of queries' results to your component
 * typed props and render props using flow type
+* server side render
 
 ## Usage
 
