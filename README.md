@@ -50,6 +50,7 @@ const queries = {
 };
 
 <GraphQL
+  queries={queries}
   render={(initializedQueries) => {
     console.log(initializeQueries.queryA.data);
     console.log(initializeQueries.queryA.loading);
@@ -78,6 +79,7 @@ const mutations = {
 
 <GraphQL
   email="test@test.com"
+  mutations={mutations}
   render={(queries, mutations) => {
     mutations.registerUser().then(
       (data) => console.log(data.registerUser),
