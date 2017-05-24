@@ -141,7 +141,8 @@ export default class GraphQL extends React.Component<void, Props<*, *>, State> {
   };
 
   render() {
-    const { client, mutations = {}, render } = this.props;
+    const { mutations = {}, render } = this.props;
+    const client = this.getClient();
 
     // process mutation initializers
     const initializedMutations = Object.keys(mutations).reduce(
