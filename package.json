@@ -119,7 +119,7 @@
     "prebuild:dist": "rimraf dist/*",
     "build:dist": "rollup -c && rollup -c --environment PRODUCTION",
     "prebuild:lib": "rimraf lib/*",
-    "build:lib": "BABEL_ENV=production babel --out-dir lib src",
+    "build:lib": "BABEL_ENV=production babel --ignore '*.test.js' --out-dir lib src",
     "build:flow": "flow-copy-source -v -i *.test.js src lib",
     "lint-staged": "lint-staged",
     "prepublishOnly": "npm test && npm run lint && npm run build",
