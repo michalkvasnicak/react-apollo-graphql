@@ -2,6 +2,7 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
+import { getDataFromTree } from './server';
 import {
   type ApolloClient,
   type CurrentQueryResult,
@@ -154,3 +155,5 @@ export default class GraphQL extends React.Component<void, Props<*, *>, State> {
     return render(this.state, initializedMutations, this.props);
   }
 }
+
+export { getDataFromTree };
