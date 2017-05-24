@@ -48,10 +48,13 @@ In order to use define and use queries, one has to initialize them.
 ```js
 // @flow
 
-import type { ObservableQuery } from 'react-apollo-graphql/types';
+import type { ApolloClient, ObservableQuery } from 'react-apollo-graphql/lib/types';
 
 const queries = {
-  queryA: (client, props): ObservableQuery<{ id: number }> => client.watchQuery({
+  queryA: (
+    client: ApolloClient,
+    props: Object
+  ): ObservableQuery<{ id: number }> => client.watchQuery({
     query: gql`{ id }`,
   }),
 };
@@ -75,10 +78,13 @@ In order to define and use mutations, one has to provided initializers. Initiali
 ```js
 // @flow
 
-import type { QueryResult } from 'react-apollo-graphql/types';
+import type { ApolloClient, QueryResult } from 'react-apollo-graphql/lib/types';
 
 const mutations = {
-  registerUser: (client, props) => (): Promise<QueryResult<{ registerUser: boolean }>> => client.mutate({
+  registerUser: (
+    client: ApolloClient,
+    props: Object
+  ) => (): Promise<QueryResult<{ registerUser: boolean }>> => client.mutate({
     mutation: gql`mutation registerUser($email: String!) { registerUser(email: $email) }`,
     variables: {
       email: props.email,
