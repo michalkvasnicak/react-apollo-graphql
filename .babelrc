@@ -1,16 +1,30 @@
 {
+  "presets": [
+    "react"
+  ],
+  "plugins": [
+    "transform-runtime",
+    "transform-class-properties",
+    ["transform-object-rest-spread", { "useBuiltIns": true }]
+  ],
   "env": {
+    "production": {
+      "presets": [
+        ["env", { "loose": true }],
+      ],
+      "plugins": [
+        "add-module-exports",
+        "flow-react-proptypes",
+        "transform-flow-strip-types",
+        "transform-class-properties"
+      ]
+    },
     "test": {
       "presets": [
         ["env", {
           "targets": { "node": "current" }
         }],
-        "jest",
-        "react"
-      ],
-      "plugins": [
-        "transform-class-properties",
-        ["transform-object-rest-spread", { "useBuiltIns": true }]
+        "jest"
       ]
     }
   }
