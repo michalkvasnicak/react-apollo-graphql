@@ -278,10 +278,14 @@ describe('GraphQL component', () => {
         networkInterface: mockNetworkInterface(),
       });
       const mutations = {
-        add: (client, props) => () =>
-          client.mutate({
-            mutation: gql`mutation a { add }`,
-          }),
+        add: (client, props) => {
+          expect(client).toBeDefined();
+
+          return () =>
+            client.mutate({
+              mutation: gql`mutation a { add }`,
+            });
+        },
       };
       const renderer = (queries, initializedMutations) => {
         expect(initializedMutations).toHaveProperty('add');
@@ -289,7 +293,7 @@ describe('GraphQL component', () => {
         return <div />;
       };
 
-      shallow(<GraphQL client={client} mutations={mutations} render={renderer} />);
+      shallow(<GraphQL mutations={mutations} render={renderer} />, { context: { client } });
     });
   });
 });
