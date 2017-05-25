@@ -1,3 +1,9 @@
+## 0.5.0 [25.05.2017]
+
+New features:
+
+* added support for refetching queries if the relevant props changed
+
 ## 0.4.0 [25.05.2017]
 
 New features:
