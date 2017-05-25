@@ -174,7 +174,7 @@ export type ApolloClient = {
   mutate(options: {
     mutation: DocumentNode,
     optimisticResponse?: Object,
-    refetchQueries?: Array<string> | Array<PureQueryOptions>,
+    refetchQueries?: Array<string | PureQueryOptions>,
     update?: MutationUpdaterFn,
     updateQueries?: MutationQueryReducersMap,
     variables?: { [key: string]: any },
