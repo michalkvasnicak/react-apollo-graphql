@@ -257,6 +257,87 @@ describe('GraphQL component', () => {
         wrapper.props(),
       );
     });
+
+    it('start polling queries and stops polling on unmount', async () => {
+      const client = new ApolloClient({
+        networkInterface: mockNetworkInterface(
+          {
+            request: {
+              query: gql`{ id }`,
+            },
+            result: {
+              data: { id: 1 },
+            },
+          },
+          {
+            request: {
+              query: gql`{ id }`,
+            },
+            result: {
+              data: { id: 1 },
+            },
+          },
+        ),
+      });
+      let observer;
+      const queries: Queries = {
+        testQuery: (client, props) => {
+          observer = client.watchQuery({
+            notifyOnNetworkStatusChange: true,
+            pollInterval: 10,
+            query: gql`{ id }`,
+          });
+
+          // $FlowExpectError
+          observer.stopPolling = jest.fn(observer.stopPolling);
+          return observer;
+        },
+      };
+      const renderer = jest.fn(() => <div />);
+
+      const wrapper = mount(<GraphQL client={client} render={renderer} queries={queries} />);
+
+      await new Promise(r => setTimeout(r, 16));
+
+      // stopPolling should be called on all queries and unscribed from them
+      wrapper.unmount(); // simulate componentWillUnmount()
+
+      // $FlowExpectError
+      expect(observer.stopPolling).toHaveBeenCalled();
+      expect(renderer).toHaveBeenCalledTimes(4);
+      expect(renderer.mock.calls[0][0]).toEqual({
+        testQuery: {
+          data: {},
+          loading: true,
+          networkStatus: 1,
+          partial: true,
+        },
+      });
+      expect(renderer.mock.calls[1][0]).toEqual({
+        testQuery: {
+          data: { id: 1 },
+          loading: false,
+          networkStatus: 7,
+          partial: false,
+        },
+      });
+      expect(renderer.mock.calls[2][0]).toEqual({
+        testQuery: {
+          data: { id: 1 },
+          loading: true,
+          networkStatus: 6,
+          partial: false,
+        },
+      });
+      expect(renderer.mock.calls[3][0]).toEqual({
+        testQuery: {
+          data: { id: 1 },
+          loading: false,
+          networkStatus: 7,
+          partial: false,
+        },
+      });
+    });
   });
 
   describe('mutations', () => {

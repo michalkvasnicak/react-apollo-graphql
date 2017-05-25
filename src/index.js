@@ -125,7 +125,10 @@ export default class GraphQL extends React.Component<void, Props<*, *>, State> {
     this.hasMount = false;
 
     // unsubscribe from all subscriptions
-    Object.keys(this.subscriptions).forEach(key => this.subscriptions[key].unsubscribe());
+    Object.keys(this.subscriptions).forEach(key => {
+      this.observers[key].stopPolling();
+      this.subscriptions[key].unsubscribe();
+    });
     this.subscriptions = {};
   }
 
