@@ -94,7 +94,7 @@ export type ObservableQuery<T> = {
   refetch(variables?: { [key: string]: any }): Promise<QueryResult<T>>,
   result(): Promise<QueryResult<T>>,
   setOptions(options: ModifiableWatchQueryOptions): Promise<QueryResult<T>>,
-  setVariables(variables: any, tryFetch: boolean): Promise<QueryResult<T>>,
+  setVariables(variables: any, tryFetch?: boolean): Promise<QueryResult<T>>,
   subscribeToMore(options: SubscribeToMoreOptions): () => void, // returns ubsubscribe function
   startPolling(pollInterval: number): void,
   stopPolling(): void,

@@ -338,6 +338,112 @@ describe('GraphQL component', () => {
         },
       });
     });
+
+    it('refetches a query only if props has changed', async () => {
+      const client = new ApolloClient({
+        networkInterface: mockNetworkInterface(
+          {
+            request: {
+              query: gql`query test($id: Int!, $text: String!){ parse(id: $id, text: $text) }`,
+              variables: { id: 1, text: '' },
+            },
+            result: {
+              data: { parse: 10 },
+            },
+          },
+          {
+            request: {
+              query: gql`query test($id: Int!, $text: String!){ parse(id: $id, text: $text) }`,
+              variables: { id: 11, text: 'Test' },
+            },
+            result: {
+              data: { parse: 10 },
+            },
+          },
+        ),
+      });
+
+      let observer;
+      const queries: Queries = {
+        testQuery: (client, props, options) => {
+          options.hasVariablesChanged((currentProps, nextProps) => {
+            if (currentProps.id === nextProps.id && currentProps.text === nextProps.text) {
+              return false;
+            }
+
+            return {
+              id: nextProps.id,
+              text: nextProps.text,
+            };
+          });
+
+          observer = client.watchQuery({
+            query: gql`query test($id: Int!, $text: String!){ parse(id: $id, text: $text) }`,
+            variables: { id: 1, text: '' },
+          });
+
+          // $FlowExpectError
+          observer.setVariables = jest.fn(observer.setVariables);
+          return observer;
+        },
+      };
+      const renderer = jest.fn(() => <div />);
+
+      const wrapper = mount(
+        <GraphQL id={10} text="" client={client} render={renderer} queries={queries} />,
+      );
+
+      await new Promise(r => setTimeout(r, 10));
+      expect(renderer).toHaveBeenCalledTimes(2);
+      expect(renderer.mock.calls[0][0]).toEqual({
+        testQuery: {
+          data: {},
+          loading: true,
+          networkStatus: 1,
+          partial: true,
+        },
+      });
+      expect(renderer.mock.calls[1][0]).toEqual({
+        testQuery: {
+          data: { parse: 10 },
+          loading: false,
+          networkStatus: 7,
+          partial: false,
+        },
+      });
+
+      // now change props so we will refetch the query with new variables
+      wrapper.setProps({ id: 11, text: 'Test' });
+      await new Promise(r => setTimeout(r, 10));
+
+      // $FlowExpectError
+      expect(observer.setVariables).toHaveBeenCalledTimes(1);
+      // $FlowExpectError
+      expect(observer.setVariables).toHaveBeenCalledWith({ id: 11, text: 'Test' });
+      expect(renderer).toHaveBeenCalledTimes(4);
+      expect(renderer.mock.calls[2][0]).toEqual({
+        testQuery: {
+          data: {},
+          loading: true,
+          networkStatus: 2,
+          partial: true,
+        },
+      });
+      expect(renderer.mock.calls[3][0]).toEqual({
+        testQuery: {
+          data: { parse: 10 },
+          loading: false,
+          networkStatus: 7,
+          partial: false,
+        },
+      });
+
+      // now change other props which are not used as a variables in query (it won't refetch);
+      wrapper.setProps({ newProp: 'test' });
+      // $FlowExpectError
+      expect(observer.setVariables).toHaveBeenCalledTimes(1);
+      expect(renderer).toHaveBeenCalledTimes(5);
+    });
   });
 
   describe('mutations', () => {

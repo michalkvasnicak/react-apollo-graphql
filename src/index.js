@@ -11,8 +11,31 @@ import {
   type Subscription,
 } from './types';
 
+type ObservableQueryOptions = {
+  // calls on componentWillReceiveProps with current props as this.props and nextProps
+  // should return false if props used for query's variables did not change
+  // otherwise should return new variables
+  hasVariablesChanged: (
+    currentProps: Object,
+    nextProps: Object,
+  ) => boolean | { [key: string]: any },
+};
+
+export type QueryInitializerOptions = {
+  // sets function to determine if there is relevant change in props to compute new variables
+  // returns false if there is no change in props used for variables
+  // or returns new variables for query.setVariables()
+  hasVariablesChanged: (
+    (currentProps: Object, nextProps: Object) => boolean | { [key: string]: any },
+  ) => void,
+};
+
 export type Queries = {
-  [key: string]: (client: ApolloClient, ownProps: Object) => ObservableQuery<any>,
+  [key: string]: (
+    client: ApolloClient,
+    ownProps: Object,
+    options: QueryInitializerOptions,
+  ) => ObservableQuery<any>,
 };
 
 type Mutation = (...args: any) => Promise<QueryResult<any>>;
@@ -36,7 +59,11 @@ type Props<Q: Queries, M: MutationsInitializers> = {
     queries: $ObjMap<
       Q,
       <A>(
-        (client: ApolloClient, ownProps: Object) => ObservableQuery<A>,
+        (
+          client: ApolloClient,
+          ownProps: Object,
+          options: QueryInitializerOptions,
+        ) => ObservableQuery<A>,
       ) => CurrentQueryResult<$ObjMap<A, <B>(B) => ?B>>,
     >,
     mutations: $ObjMap<M, <V>((client: ApolloClient, ownProps: Object) => V) => V>,
@@ -65,7 +92,9 @@ export default class GraphQL extends React.Component<void, Props<*, *>, State> {
 
   context: { client: ?ApolloClient };
   hasMount: boolean = false;
-  observers: { [key: string]: ObservableQuery<*> } = {};
+  observers: {
+    [key: string]: { options: ObservableQueryOptions, observer: ObservableQuery<*> },
+  } = {};
   state = {};
   subscriptions: { [key: string]: Subscription } = {};
 
@@ -81,10 +110,25 @@ export default class GraphQL extends React.Component<void, Props<*, *>, State> {
     // alse create state so we can update this component's state in response
     // to observable changes
     const results = Object.keys(queries).reduce((state, key) => {
-      // now call query initializer with component's props and client
-      const observer = queries[key](client, props);
+      const options = {
+        hasVariablesChanged: () => false,
+      };
 
-      this.observers[key] = observer;
+      // now call query initializer with component's props and client
+      const observer = queries[key](client, props, {
+        hasVariablesChanged(fn) {
+          if (typeof fn !== 'function') {
+            throw new Error(`hasVariablesChanged for query ${key} must be a function`);
+          }
+
+          options.hasVariablesChanged = fn;
+        },
+      });
+
+      this.observers[key] = {
+        options,
+        observer,
+      };
 
       // subscribe to changes
       const subscription = observer.subscribe({
@@ -103,6 +147,24 @@ export default class GraphQL extends React.Component<void, Props<*, *>, State> {
     this.setState(results);
   }
 
+  componentWillReceiveProps = (nextProps: Object) => {
+    // call hasVariablesChanged on all observable queries
+    // and call setVariables() on them if they did not return false
+    Object.keys(this.observers).forEach(key => {
+      const variables = this.observers[key].options.hasVariablesChanged(this.props, nextProps);
+
+      if (variables === false) {
+        return;
+      }
+
+      if (variables === true) {
+        throw new Error(`hasVariablesChanged can't return true`);
+      }
+
+      this.observers[key].observer.setVariables(variables);
+    });
+  };
+
   getClient = (): ApolloClient => {
     const { client: clientFromContext } = this.context;
     const { client: clientFromProps } = this.props;
@@ -119,14 +181,14 @@ export default class GraphQL extends React.Component<void, Props<*, *>, State> {
   };
 
   getObservers = (): Array<ObservableQuery<*>> =>
-    Object.keys(this.observers).map(key => this.observers[key]);
+    Object.keys(this.observers).map(key => this.observers[key].observer);
 
   componentWillUnmount() {
     this.hasMount = false;
 
     // unsubscribe from all subscriptions
     Object.keys(this.subscriptions).forEach(key => {
-      this.observers[key].stopPolling();
+      this.observers[key].observer.stopPolling();
       this.subscriptions[key].unsubscribe();
     });
     this.subscriptions = {};

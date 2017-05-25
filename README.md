@@ -48,15 +48,37 @@ In order to use define and use queries, one has to initialize them.
 ```js
 // @flow
 
+import type { QueryInitializerOptions } from 'react-apollo-graphql';
 import type { ApolloClient, ObservableQuery } from 'react-apollo-graphql/lib/types';
 
 const queries = {
+  // queryA will be resolved only once
   queryA: (
     client: ApolloClient,
     props: Object
   ): ObservableQuery<{ id: number }> => client.watchQuery({
     query: gql`{ id }`,
   }),
+  // queryB will be resolved everytime the relevant props change
+  queryB: (
+    client: ApolloClient,
+    props: Object,
+    options: QueryInitializerOptions
+  ): ObservableQuery<{ name: string }> => {
+    // add our function which will be called on every props change
+    options.hasVariablesChanged((currentProps, nextProps) => {
+      if (currentProps.name === nextProps.name) {
+        return false;
+      }
+
+      return { name: nextProps.name };
+    });
+
+    return client.watchQuery({
+      query: gql`query test($name: String!) { id(name: $name)}`,
+      variables: { name: props.name },
+    });
+  }
 };
 
 <GraphQL
@@ -110,9 +132,24 @@ const mutations = {
 
 * apollo client is provided from `apollo-client` package. See [documentation](http://dev.apollodata.com/core/apollo-client-api.html#apollo-client).
 
+### QueryInitializerOptions
+
+```js
+// @flow
+
+export type QueryInitializerOptions = {
+  // sets function to determine if there is a relevant change in props to compute new variables
+  // returns false if there is no change in props used for variables
+  // or returns new variables for query.setVariables()
+  hasVariablesChanged: (
+    (currentProps: Object, nextProps: Object) => boolean | { [key: string]: any },
+  ) => void,
+};
+```
+
 ### `<GraphQL queries?={Queries} mutations?={Mutations} render={RenderFunction} />`
 
-* `Queries = { [key: string]: (client: ApolloClient, props: Object) => ObservableQuery<*> }`
+* `Queries = { [key: string]: (client: ApolloClient, props: Object, options: QueryInitializerOptions) => ObservableQuery<*> }`
   * `optional` prop, object with query initializers.
   * **each initializer will be initialized with apollo client and props passed to initializer on component mount**
   * each initializer has to return `ObservableQuery` (this means that it has to call the [`client.watchQuery() method`](http://dev.apollodata.com/core/apollo-client-api.html#ApolloClient\.watchQuery))

@@ -1,6 +1,6 @@
 // @flow
 
-import GraphQL from './';
+import GraphQL, { type QueryInitializerOptions } from './';
 import React from 'react';
 import type { ApolloClient, ObservableQuery } from './types';
 
@@ -17,7 +17,11 @@ import type { ApolloClient, ObservableQuery } from './types';
   <GraphQL render={10} />;
 
   const queries: {
-    a: (client: ApolloClient, props: Object) => ObservableQuery<{ id: number }>,
+    a: (
+      client: ApolloClient,
+      props: Object,
+      options: QueryInitializerOptions,
+    ) => ObservableQuery<{ id: number }>,
   } = ({}: any);
 
   // test queries
