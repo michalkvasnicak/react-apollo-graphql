@@ -1,3 +1,31 @@
+## 0.3.3 [24.05.2017]
+
+Configuration:
+
+* do not compile flow files using babel
+
+## 0.3.2 [24.05.2017]
+
+Fixed bugs:
+
+* fixed passing client to mutations' initializer
+
+## 0.3.1 [24.05.2017]
+
+Fixed bugs:
+
+* fixed `main`, `jsnext:main` and `module` paths in `package.json`
+
+## 0.3.0 [24.05.2017]
+
+New features:
+
+* export `getDataFromTree` from `index.js`
+
+Configuration:
+
+* new build configuration, now supports `commonjs`, `umd` and `es` modules
+
 ## 0.2.0 [23.05.2017]
 
 New features:
