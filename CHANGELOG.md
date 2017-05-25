@@ -1,3 +1,9 @@
+## 0.5.1 [25.05.2017]
+
+Fixed bugs:
+
+* fixed flow annotation for `client.mutate.refetchQueries`
+
 ## 0.5.0 [25.05.2017]
 
 New features:
