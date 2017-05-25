@@ -1,3 +1,10 @@
+## 0.4.0 [25.05.2017]
+
+New features:
+
+* better flow types
+* added support for query polling
+
 ## 0.3.3 [24.05.2017]
 
 Configuration:
