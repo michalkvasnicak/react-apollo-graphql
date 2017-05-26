@@ -4,9 +4,14 @@ import GraphQL from './';
 import { Children } from 'react';
 
 export async function getDataFromTree(
-  element: React$Element<any>,
+  element: ?React$Element<any>,
   context?: Object = {},
 ): Promise<any> {
+  // if null element, do nothing
+  if (element == null) {
+    return;
+  }
+
   // get type of element
   const Component = element.type;
 
@@ -55,16 +60,7 @@ export async function getDataFromTree(
             observer =>
               new Promise((resolve, reject) => {
                 try {
-                  const subscription = observer.subscribe({
-                    next(data) {
-                      subscription.unsubscribe();
-                      resolve();
-                    },
-                    error() {
-                      subscription.unsubscribe();
-                      resolve();
-                    },
-                  });
+                  observer.result().then(() => resolve(), () => resolve());
                 } catch (e) {
                   reject(e);
                 }
