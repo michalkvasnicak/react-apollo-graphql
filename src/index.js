@@ -44,6 +44,13 @@ type MutationsInitializers = {
   [key: string]: (client: ApolloClient, ownProps: Object) => Mutation,
 };
 
+type FetchersInitializers = {
+  [key: string]: (
+    client: ApolloClient,
+    ownProps: Object,
+  ) => (...args: any) => Promise<QueryResult<any>>,
+};
+
 // not used because of
 // https://github.com/facebook/flow/issues/3986
 type DefaultProps = {
@@ -51,8 +58,9 @@ type DefaultProps = {
   queries: Queries,
 };
 
-type Props<Q: Queries, M: MutationsInitializers> = {
+type Props<F: FetchersInitializers, Q: Queries, M: MutationsInitializers> = {
   client?: ApolloClient,
+  fetchers?: F,
   mutations?: M,
   queries?: Q,
   render: (
@@ -67,6 +75,12 @@ type Props<Q: Queries, M: MutationsInitializers> = {
       ) => CurrentQueryResult<$ObjMap<A, <B>(B) => ?B>>,
     >,
     mutations: $ObjMap<M, <V>((client: ApolloClient, ownProps: Object) => V) => V>,
+    fetchers: $ObjMap<
+      F,
+      <A: (...args: any) => Promise<QueryResult<any>>>(
+        (client: ApolloClient, ownProps: Object) => A,
+      ) => A,
+    >,
     props: *,
   ) => React$Element<any>,
 };
@@ -79,7 +93,7 @@ type State = {
 // on server we have only 1 pass, so we can halt execution on all queries passed to GraphQL
 // then wait for them to resolve, and call render function and repeat these steps
 // until we have no more queries to process
-export default class GraphQL extends React.Component<void, Props<*, *>, State> {
+export default class GraphQL extends React.Component<void, Props<*, *, *>, State> {
   static contextTypes = {
     client: PropTypes.object,
   };
@@ -206,7 +220,7 @@ export default class GraphQL extends React.Component<void, Props<*, *>, State> {
   };
 
   render() {
-    const { mutations = {}, render } = this.props;
+    const { fetchers = {}, mutations = {}, render } = this.props;
     const client = this.getClient();
 
     // process mutation initializers
@@ -218,7 +232,15 @@ export default class GraphQL extends React.Component<void, Props<*, *>, State> {
       {},
     );
 
-    return render(this.state, initializedMutations, this.props);
+    const initializedFetchers = Object.keys(fetchers).reduce(
+      (res, key) => ({
+        ...res,
+        [key]: fetchers[key](client, this.props),
+      }),
+      {},
+    );
+
+    return render(this.state, initializedMutations, initializedFetchers, this.props);
   }
 }
 

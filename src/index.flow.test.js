@@ -2,7 +2,7 @@
 
 import GraphQL, { type QueryInitializerOptions } from './';
 import React from 'react';
-import type { ApolloClient, ObservableQuery } from './types';
+import type { ApolloClient, ObservableQuery, QueryResult } from './types';
 
 // test GraphQL component
 (function() {
@@ -30,6 +30,25 @@ import type { ApolloClient, ObservableQuery } from './types';
     render={q => {
       // $FlowExpectError
       (q.a.data.id: string);
+
+      return <div />;
+    }}
+  />;
+
+  const fetchers: {
+    search: (
+      client: ApolloClient,
+      props: Object,
+    ) => (query: string) => Promise<QueryResult<{ results: Array<{ id: number }> }>>,
+  } = ({}: any);
+
+  // test fetchers
+  <GraphQL
+    fetchers={fetchers}
+    render={(q, m, f) => {
+      (f.search: (query: string) => Promise<QueryResult<{ results: Array<{ id: number }> }>>);
+      // $FlowExpectError
+      (f.search: (query: string) => Promise<QueryResult<{ results: Array<{ id: string }> }>>);
 
       return <div />;
     }}

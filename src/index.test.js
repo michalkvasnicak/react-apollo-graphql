@@ -254,6 +254,7 @@ describe('GraphQL component', () => {
       expect(renderer).toHaveBeenCalledWith(
         { testQuery: { data: {}, loading: true, networkStatus: 1, partial: true } },
         {},
+        {},
         wrapper.props(),
       );
     });
@@ -443,6 +444,56 @@ describe('GraphQL component', () => {
       // $FlowExpectError
       expect(observer.setVariables).toHaveBeenCalledTimes(1);
       expect(renderer).toHaveBeenCalledTimes(5);
+    });
+  });
+
+  describe('fetchers', () => {
+    it('passes empty fetchers object to render function', async () => {
+      const client = new ApolloClient({
+        networkInterface: mockNetworkInterface(),
+      });
+      const steps = [
+        (q, m, fetchers) => {
+          expect(fetchers).toEqual({});
+        },
+      ];
+      const stepper = createStepper(steps);
+
+      // first render as a render prop
+      shallow(<GraphQL client={client} render={stepper.renderer} />);
+
+      await stepper.promise;
+    });
+
+    it('initalizes and passes fetchers object to render function on each render', () => {
+      const client = new ApolloClient({
+        networkInterface: mockNetworkInterface(),
+      });
+      const fetchers = {
+        a: jest.fn(),
+      };
+      const renderer = jest.fn(() => <div />);
+
+      // first render as a render prop
+      const wrapper = mount(<GraphQL fetchers={fetchers} render={renderer} />, {
+        context: { client },
+      });
+
+      expect(renderer).toHaveBeenCalledTimes(1);
+      expect(fetchers.a).toHaveBeenCalledTimes(1);
+      expect(fetchers.a).toHaveBeenCalledWith(client, wrapper.props());
+
+      wrapper.setProps({ test: 1 });
+
+      expect(renderer).toHaveBeenCalledTimes(2);
+      expect(fetchers.a).toHaveBeenCalledTimes(2);
+      expect(fetchers.a).toHaveBeenCalledWith(client, wrapper.props());
+
+      wrapper.setProps({ test: 2 });
+
+      expect(renderer).toHaveBeenCalledTimes(3);
+      expect(fetchers.a).toHaveBeenCalledTimes(3);
+      expect(fetchers.a).toHaveBeenCalledWith(client, wrapper.props());
     });
   });
 

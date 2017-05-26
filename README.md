@@ -117,10 +117,42 @@ const mutations = {
 <GraphQL
   email="test@test.com"
   mutations={mutations}
-  render={(queries, mutations, props) => {
+  render={(queries, mutations, fetchers, props) => {
     mutations.registerUser(props.email).then(
       (data) => console.log(data.registerUser),
       e => console.error(e),
+    );
+  }}
+/>
+```
+
+### Fetchers
+
+In order to use fetchers (queries that run only when user invokes them), user has to first initialize them. Fetchers are initialized with `client` and current `props` on each render and passed to `render()` function.
+
+```js
+// @flow
+
+import type { QueryInitializerOptions } from 'react-apollo-graphql';
+import type { ApolloClient, QueryResult } from 'react-apollo-graphql/lib/types';
+
+const fetchers = {
+  // queryA will be resolved only once
+  search: (
+    client: ApolloClient,
+    props: Object
+  ) => (term: string): Promise<QueryResult<Array<{ id: number }>>> => client.query({
+    query: gql`query search($term: String!) { search(term: $term) { id } }`,
+    variables: { term },
+  }),
+};
+
+<GraphQL
+  fetchers={fetchers}
+  text="text"
+  render={(queries, mutations, fetchers, props) => {
+    fetchers.search(props.text).then(
+      (data) => console.log(data.search[0].id);
     );
   }}
 />
@@ -204,8 +236,12 @@ export type QueryInitializerOptions = {
 };
 ```
 
-### `<GraphQL queries?={Queries} mutations?={Mutations} render={RenderFunction} />`
+### `<GraphQL fetchers?={Fetchers} queries?={Queries} mutations?={Mutations} render={RenderFunction} />`
 
+* `Fetchers = { [key: string]: (client: ApolloClient: props: Object) => (...args: any) => Promise<QueryResult<*>>}`
+  * `optional` prop, object with fetchers' initialier
+  * **each initializer will be initialized with apollo client and props passed to the initializer on each render (on mount and every update)**
+  * each initializer has to return `(...args: any) => Promise<QueryResult<*>>` (this means that it has to call the [`client.query() method`](http://dev.apollodata.com/core/apollo-client-api.html#ApolloClient\.query))
 * `Queries = { [key: string]: (client: ApolloClient, props: Object, options: QueryInitializerOptions) => ObservableQuery<*> }`
   * `optional` prop, object with query initializers.
   * **each initializer will be initialized with apollo client and props passed to initializer on component mount**
@@ -214,8 +250,9 @@ export type QueryInitializerOptions = {
   * `optional` prop, object with mutation initializers
   * **each initializer will be initialized with apollo client and props passed to the initializer on each render (on mount and every update)**
   * each initializer has to return `() => Promise<QueryResult<*>>` (this means that it has to call the [`client.mutate() method`](http://dev.apollodata.com/core/apollo-client-api.html#ApolloClient\.mutate))
-* `RenderFunction = (queries: InitializedQueries, mutations: InitializedMutations, props) => React$Element<any>`
+* `RenderFunction = (queries: InitializedQueries, mutations: InitializedMutations, fetchers: InitializedFetchers, props: Object) => React$Element<any>`
   * called on mount and updates
   * `queries` arg: result of each query initializer passed to the `queries` prop on `<GraphQL />` component will be mapped to it's result
   * `mutations` arg: each mutation initializer from the `mutations` prop passed to the `<GraphQL />` component will be called on render and the result will be passed under the same `key` to the `mutations` arg of render function.
+  * `fetchers` arg: each fetcher initializer from the `fetchers` prop passed to the `<GraphQL />` component will be called on render and the returned function will be passed under the same `key` to the `fetchers` arg of render function.
   * `props` arg: current props passed to `<GraphQL />` component
