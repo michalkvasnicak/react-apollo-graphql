@@ -132,7 +132,7 @@ For server side rendering you need to:
 
 1. import helper as `import { getDataFromTree } from 'react-apollo-graphql';`
 2. instantiate your view (`const view = <App />;`)
-3. wait for all queries to be resolved `await getDataFromTree(view);``
+3. wait for all queries to be resolved `await getDataFromTree(view);`
 4. render view `ReactDOM.renderToString(view);`
 5. profit (but you have to hydrate your apollo store on the client side 😉 )
 
