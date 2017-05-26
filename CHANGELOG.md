@@ -1,3 +1,9 @@
+## 0.5.2 [26.05.2017]
+
+Fixed bugs:
+
+* Fixed passing `null` elements to `getDataFromTree` on the server side
+
 ## 0.5.1 [25.05.2017]
 
 Fixed bugs:

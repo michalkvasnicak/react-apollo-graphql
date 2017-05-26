@@ -126,6 +126,63 @@ const mutations = {
 />
 ```
 
+## Server side render
+
+For server side rendering you need to:
+
+1. import helper as `import { getDataFromTree } from 'react-apollo-graphql';`
+2. instantiate your view (`const view = <App />;`)
+3. wait for all queries to be resolved `await getDataFromTree(view);``
+4. render view `ReactDOM.renderToString(view);`
+5. profit (but you have to hydrate your apollo store on the client side 😉 )
+
+### React-Router v4
+
+```js
+// example taken from react-router v4 docs
+import { createServer } from 'http';
+import ApolloClient from 'apollo-client';
+import ApolloProvider from 'react-apollo';
+import React from 'react';
+import ReactDOMServer from 'react-dom/server';
+import { StaticRouter } from 'react-router';
+import { getDataFromTree } from 'react-apollo-graphql';
+import App from './App';
+
+createServer(async (req, res) => {
+  const context = {};
+  const client = new ApolloClient();
+
+  const view = (
+    <StaticRouter
+      location={req.url}
+      context={context}
+    >
+      <ApolloProvider client={client}>
+        <App/>
+      </ApolloProvider>
+    </StaticRouter>
+  );
+
+  await getDataFromTree(view);
+
+  const html = ReactDOMServer.renderToString(view);
+
+  if (context.url) {
+    res.writeHead(301, {
+      Location: context.url
+    });
+    res.end();
+  } else {
+    res.write(`
+      <!doctype html>
+      <div id="app">${html}</div>
+    `);
+    res.end();
+  }
+}).listen(3000);
+```
+
 ## API
 
 ### ApolloClient
