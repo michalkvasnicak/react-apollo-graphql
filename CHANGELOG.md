@@ -1,3 +1,9 @@
+## 0.6.0 [26.05.2017]
+
+Breaking changes:
+
+* added support for fetchers, `render` function now accepts as the third argument initialized fetchers and props are fourth argument in order
+
 ## 0.5.2 [26.05.2017]
 
 Fixed bugs:
