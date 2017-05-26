@@ -1,3 +1,9 @@
+## 0.6.1 [26.05.2017]
+
+Fixed bugs:
+
+* added missing flow annotation for `client.query()` method
+
 ## 0.6.0 [26.05.2017]
 
 Breaking changes:
