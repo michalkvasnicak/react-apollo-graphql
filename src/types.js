@@ -171,6 +171,14 @@ export class ApolloError extends Error {
 }
 
 export type ApolloClient = {
+  query(options: {
+    fetchPolicy?: FetchPolicy,
+    metadata?: any,
+    notifyOnNetworkStatusChange?: boolean,
+    query: DocumentNode,
+    reducer?: OperationResultReducer,
+    variables?: { [key: string]: any },
+  }): Promise<QueryResult<*>>,
   mutate(options: {
     mutation: DocumentNode,
     optimisticResponse?: Object,
