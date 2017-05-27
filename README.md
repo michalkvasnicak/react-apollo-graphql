@@ -252,7 +252,7 @@ export type QueryInitializerOptions = {
   * each initializer has to return `() => Promise<QueryResult<*>>` (this means that it has to call the [`client.mutate() method`](http://dev.apollodata.com/core/apollo-client-api.html#ApolloClient\.mutate))
 * `RenderFunction = (queries: InitializedQueries, mutations: InitializedMutations, fetchers: InitializedFetchers, props: Object) => React$Element<any>`
   * called on mount and updates
-  * `queries` arg: result of each query initializer passed to the `queries` prop on `<GraphQL />` component will be mapped to it's result
+  * `queries` arg: result of each query initializer passed to the `queries` prop on `<GraphQL />` component will be mapped to it's result, plus additional methods like `fetchMore(), refetch(), etc` see [`client.watchQuery() method`](http://dev.apollodata.com/core/apollo-client-api.html#ApolloClient\.watchQuery)
   * `mutations` arg: each mutation initializer from the `mutations` prop passed to the `<GraphQL />` component will be called on render and the result will be passed under the same `key` to the `mutations` arg of render function.
   * `fetchers` arg: each fetcher initializer from the `fetchers` prop passed to the `<GraphQL />` component will be called on render and the returned function will be passed under the same `key` to the `fetchers` arg of render function.
   * `props` arg: current props passed to `<GraphQL />` component

@@ -72,7 +72,7 @@ type Props<F: FetchersInitializers, Q: Queries, M: MutationsInitializers> = {
           ownProps: Object,
           options: QueryInitializerOptions,
         ) => ObservableQuery<A>,
-      ) => CurrentQueryResult<$ObjMap<A, <B>(B) => ?B>>,
+      ) => CurrentQueryResult<$ObjMap<A, <B>(B) => ?B>> & { observer: ObservableQuery<A> },
     >,
     mutations: $ObjMap<M, <V>((client: ApolloClient, ownProps: Object) => V) => V>,
     fetchers: $ObjMap<
@@ -240,7 +240,17 @@ export default class GraphQL extends React.Component<void, Props<*, *, *>, State
       {},
     );
 
-    return render(this.state, initializedMutations, initializedFetchers, this.props);
+    const queries = Object.keys(this.state).reduce(
+      (res, key) => ({
+        [key]: {
+          observer: this.observers[key].observer,
+          ...this.state[key],
+        },
+      }),
+      {},
+    );
+
+    return render(queries, initializedMutations, initializedFetchers, this.props);
   }
 }
 

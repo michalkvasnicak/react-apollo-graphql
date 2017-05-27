@@ -82,25 +82,19 @@ describe('GraphQL component', () => {
       const stepper = createStepper([
         // on first call we expect queries to be in loading state with null data
         queries => {
-          expect(queries).toEqual({
-            testQuery: {
-              data: {},
-              loading: true,
-              networkStatus: 1,
-              partial: true,
-            },
-          });
+          expect(queries.testQuery.data).toEqual({});
+          expect(queries.testQuery.loading).toBe(true);
+          expect(queries.testQuery.networkStatus).toBe(1);
+          expect(queries.testQuery.partial).toBe(true);
+          expect(queries.testQuery.observer.refetch).toBeDefined();
+          expect(queries.testQuery.observer.fetchMore).toBeDefined();
         },
         // on second call we expect queries to be resolved
         queries => {
-          expect(queries).toEqual({
-            testQuery: {
-              data: { id: 1 },
-              loading: false,
-              networkStatus: 7,
-              partial: false,
-            },
-          });
+          expect(queries.testQuery.data).toEqual({ id: 1 });
+          expect(queries.testQuery.loading).toBe(false);
+          expect(queries.testQuery.networkStatus).toBe(7);
+          expect(queries.testQuery.partial).toBe(false);
         },
       ]);
       const queries: Queries = {
@@ -142,14 +136,10 @@ describe('GraphQL component', () => {
       const stepper = createStepper([
         // on first call we expect queries to be in loading state with null data
         queries => {
-          expect(queries).toEqual({
-            testQuery: {
-              data: {},
-              loading: true,
-              networkStatus: 1,
-              partial: true,
-            },
-          });
+          expect(queries.testQuery.data).toEqual({});
+          expect(queries.testQuery.loading).toBe(true);
+          expect(queries.testQuery.networkStatus).toBe(1);
+          expect(queries.testQuery.partial).toBe(true);
         },
         // on second call we expect queries to be resolved
         queries => {
@@ -200,6 +190,7 @@ describe('GraphQL component', () => {
               loading: true,
               networkStatus: 1,
               partial: true,
+              observer: queries.testQuery.observer,
             },
           });
         },
@@ -252,7 +243,15 @@ describe('GraphQL component', () => {
       // has been resolved
       expect(renderer).toHaveBeenCalledTimes(1);
       expect(renderer).toHaveBeenCalledWith(
-        { testQuery: { data: {}, loading: true, networkStatus: 1, partial: true } },
+        {
+          testQuery: {
+            data: {},
+            loading: true,
+            networkStatus: 1,
+            partial: true,
+            observer: renderer.mock.calls[0][0].testQuery.observer,
+          },
+        },
         {},
         {},
         wrapper.props(),
@@ -312,6 +311,7 @@ describe('GraphQL component', () => {
           loading: true,
           networkStatus: 1,
           partial: true,
+          observer: renderer.mock.calls[0][0].testQuery.observer,
         },
       });
       expect(renderer.mock.calls[1][0]).toEqual({
@@ -320,6 +320,7 @@ describe('GraphQL component', () => {
           loading: false,
           networkStatus: 7,
           partial: false,
+          observer: renderer.mock.calls[0][0].testQuery.observer,
         },
       });
       expect(renderer.mock.calls[2][0]).toEqual({
@@ -328,6 +329,7 @@ describe('GraphQL component', () => {
           loading: true,
           networkStatus: 6,
           partial: false,
+          observer: renderer.mock.calls[0][0].testQuery.observer,
         },
       });
       expect(renderer.mock.calls[3][0]).toEqual({
@@ -336,6 +338,7 @@ describe('GraphQL component', () => {
           loading: false,
           networkStatus: 7,
           partial: false,
+          observer: renderer.mock.calls[0][0].testQuery.observer,
         },
       });
     });
@@ -402,6 +405,7 @@ describe('GraphQL component', () => {
           loading: true,
           networkStatus: 1,
           partial: true,
+          observer: renderer.mock.calls[0][0].testQuery.observer,
         },
       });
       expect(renderer.mock.calls[1][0]).toEqual({
@@ -410,6 +414,7 @@ describe('GraphQL component', () => {
           loading: false,
           networkStatus: 7,
           partial: false,
+          observer: renderer.mock.calls[0][0].testQuery.observer,
         },
       });
 
@@ -428,6 +433,7 @@ describe('GraphQL component', () => {
           loading: true,
           networkStatus: 2,
           partial: true,
+          observer: renderer.mock.calls[0][0].testQuery.observer,
         },
       });
       expect(renderer.mock.calls[3][0]).toEqual({
@@ -436,6 +442,7 @@ describe('GraphQL component', () => {
           loading: false,
           networkStatus: 7,
           partial: false,
+          observer: renderer.mock.calls[0][0].testQuery.observer,
         },
       });
 

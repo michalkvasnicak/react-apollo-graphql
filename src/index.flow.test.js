@@ -30,6 +30,9 @@ import type { ApolloClient, ObservableQuery, QueryResult } from './types';
     render={q => {
       // $FlowExpectError
       (q.a.data.id: string);
+      (q.a.observer.fetchMore: (variables: any) => Promise<QueryResult<{ id: number }>>);
+      // $FlowExpectError
+      (q.a.observer.fetchMore: (variables: any) => Promise<QueryResult<{ id: string }>>);
 
       return <div />;
     }}
