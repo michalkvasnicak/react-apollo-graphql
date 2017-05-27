@@ -1,3 +1,9 @@
+## 0.7.0 [27.05.2017]
+
+New features:
+
+* added `observer` to each query result so you can manipulate them using `refetch(), fetchMore(), etc...`
+
 ## 0.6.1 [26.05.2017]
 
 Fixed bugs:
