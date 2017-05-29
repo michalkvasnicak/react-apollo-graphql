@@ -1,3 +1,9 @@
+## 0.8.0 [29.05.2017]
+
+New featues:
+
+* added flow helper `ResultTypeToResultObject` to convert query result data type to render function query result type.
+
 ## 0.7.0 [27.05.2017]
 
 New features:
