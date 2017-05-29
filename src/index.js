@@ -245,6 +245,7 @@ export default class GraphQL extends React.Component<void, Props<*, *, *>, State
 
     const queries = Object.keys(this.state).reduce(
       (res, key) => ({
+        ...res,
         [key]: {
           observer: this.observers[key].observer,
           ...this.state[key],
