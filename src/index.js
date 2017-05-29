@@ -112,10 +112,9 @@ export default class GraphQL extends React.Component<void, Props<*, *, *>, State
   state = {};
   subscriptions: { [key: string]: Subscription } = {};
 
-  componentWillMount() {
-    this.hasMount = true;
+  constructor(props: Props<*, *, *>, context: Object) {
+    super(props, context);
 
-    const props = this.props;
     const { mutations = {}, queries = {}, render } = this.props;
     const client = this.getClient();
 
@@ -158,7 +157,11 @@ export default class GraphQL extends React.Component<void, Props<*, *, *>, State
       };
     }, {});
 
-    this.setState(results);
+    this.state = results;
+  }
+
+  componentWillMount() {
+    this.hasMount = true;
   }
 
   componentWillReceiveProps = (nextProps: Object) => {
