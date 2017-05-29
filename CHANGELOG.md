@@ -1,6 +1,12 @@
+## 0.8.1 [29.05.2017]
+
+Fixed bugs:
+
+* move code from `componentWillMount` to `constructor` so we have current query results on first render
+
 ## 0.8.0 [29.05.2017]
 
-New featues:
+New features:
 
 * added flow helper `ResultTypeToResultObject` to convert query result data type to render function query result type.
 
