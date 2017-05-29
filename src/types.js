@@ -102,6 +102,13 @@ export type ObservableQuery<T> = {
   variables: { [key: string]: any },
 };
 
+/*
+ * Helper type used if you need to annotate type for arguments passed from render queries arg
+ */
+export type ResultTypeToResultObject<T: Object> = CurrentQueryResult<$ObjMap<T, <V>(V) => ?V>> & {
+  observer: ObservableQuery<T>,
+};
+
 export type PureQueryOptions = {
   query: DocumentNode,
   variables?: { [key: string]: any },

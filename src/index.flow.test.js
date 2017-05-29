@@ -2,7 +2,7 @@
 
 import GraphQL, { type QueryInitializerOptions } from './';
 import React from 'react';
-import type { ApolloClient, ObservableQuery, QueryResult } from './types';
+import type { ApolloClient, ObservableQuery, QueryResult, ResultTypeToResultObject } from './types';
 
 // test GraphQL component
 (function() {
@@ -56,4 +56,13 @@ import type { ApolloClient, ObservableQuery, QueryResult } from './types';
       return <div />;
     }}
   />;
+
+  // utils
+  const uTest1: ResultTypeToResultObject<{ user: { name: string } }> = ({}: any);
+  (uTest1.data.user: ?{ name: string });
+  (uTest1.loading: boolean);
+  (uTest1.error: ?Error);
+  (uTest1.networkStatus: number);
+  (uTest1.partial: ?boolean);
+  (uTest1.observer: ObservableQuery<{ user: { name: string } }>);
 })();
