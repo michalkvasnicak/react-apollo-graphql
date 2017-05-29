@@ -6,6 +6,9 @@
 .*/dist/.*
 .*/lib/.*
 .*/node_modules/babel-plugin-flow-react-proptypes/src/__test__/.*
+.*/node_modules/apollo-test-utils/.*
+.*/node_modules/graphql-tag/.*
+.*/node_modules/graphql-tools/.*
 
 [include]
 
