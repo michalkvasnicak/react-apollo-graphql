@@ -1,3 +1,9 @@
+## 0.8.2 [29.05.2017]
+
+Fixed bugs:
+
+* fixed merging query results in `render` method
+
 ## 0.8.1 [29.05.2017]
 
 Fixed bugs:
