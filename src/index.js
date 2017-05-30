@@ -44,11 +44,10 @@ type MutationsInitializers = {
   [key: string]: (client: ApolloClient, ownProps: Object) => Mutation,
 };
 
+type Fetcher = (...args: any) => Promise<QueryResult<any>>;
+
 type FetchersInitializers = {
-  [key: string]: (
-    client: ApolloClient,
-    ownProps: Object,
-  ) => (...args: any) => Promise<QueryResult<any>>,
+  [key: string]: (client: ApolloClient, ownProps: Object) => Fetcher,
 };
 
 // not used because of
@@ -101,7 +100,9 @@ export default class GraphQL extends React.Component<void, Props<*, *, *>, void>
   };*/
 
   context: { client: ?ApolloClient };
+  fetchers: { [key: string]: Fetcher } = {};
   hasMount: boolean = false;
+  mutations: { [key: string]: Mutation } = {};
   observers: {
     [key: string]: { options: ObservableQueryOptions, observer: ObservableQuery<*> },
   } = {};
@@ -110,7 +111,7 @@ export default class GraphQL extends React.Component<void, Props<*, *, *>, void>
   constructor(props: Props<*, *, *>, context: Object) {
     super(props, context);
 
-    const { mutations = {}, queries = {}, render } = this.props;
+    const { fetchers = {}, mutations = {}, queries = {}, render } = this.props;
     const client = this.getClient();
 
     // now process queries in props and assign subscriptions to internal state
@@ -144,6 +145,9 @@ export default class GraphQL extends React.Component<void, Props<*, *, *>, void>
 
       this.subscriptions[key] = subscription;
     });
+
+    this.initializeFetchers(fetchers, this.props);
+    this.initializeMutations(mutations, this.props);
   }
 
   componentWillMount() {
@@ -166,6 +170,12 @@ export default class GraphQL extends React.Component<void, Props<*, *, *>, void>
 
       this.observers[key].observer.setVariables(variables);
     });
+
+    // reinitialize mutations
+    this.initializeMutations(nextProps.mutations, nextProps);
+
+    // reinitialize fetchers
+    this.initializeFetchers(nextProps.fetchers, nextProps);
   };
 
   getClient = (): ApolloClient => {
@@ -197,6 +207,28 @@ export default class GraphQL extends React.Component<void, Props<*, *, *>, void>
     this.subscriptions = {};
   }
 
+  initializeFetchers = (fetchers: { [key: string]: Fetcher } = {}, props: Object) => {
+    const client = this.getClient();
+
+    this.fetchers = Object.keys(fetchers).reduce((initialized, fetcherName) => {
+      return {
+        ...initialized,
+        [fetcherName]: fetchers[fetcherName](client, props),
+      };
+    }, {});
+  };
+
+  initializeMutations = (mutations: MutationsInitializers = {}, props: Object) => {
+    const client = this.getClient();
+
+    this.mutations = Object.keys(mutations).reduce((initialized, mutationName) => {
+      return {
+        ...initialized,
+        [mutationName]: mutations[mutationName](client, props),
+      };
+    }, {});
+  };
+
   forceRerender = () => {
     if (!this.hasMount) {
       return;
@@ -206,25 +238,8 @@ export default class GraphQL extends React.Component<void, Props<*, *, *>, void>
   };
 
   render() {
-    const { fetchers = {}, mutations = {}, render } = this.props;
+    const { fetchers = {}, render } = this.props;
     const client = this.getClient();
-
-    // process mutation initializers
-    const initializedMutations = Object.keys(mutations).reduce(
-      (res, key) => ({
-        ...res,
-        [key]: mutations[key](client, this.props),
-      }),
-      {},
-    );
-
-    const initializedFetchers = Object.keys(fetchers).reduce(
-      (res, key) => ({
-        ...res,
-        [key]: fetchers[key](client, this.props),
-      }),
-      {},
-    );
 
     const queries = Object.keys(this.observers).reduce(
       (res, key) => ({
@@ -237,7 +252,7 @@ export default class GraphQL extends React.Component<void, Props<*, *, *>, void>
       {},
     );
 
-    return render(queries, initializedMutations, initializedFetchers, this.props);
+    return render(queries, this.mutations, this.fetchers, this.props);
   }
 }
 
