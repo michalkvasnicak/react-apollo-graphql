@@ -9,6 +9,8 @@
 
 This is opinionated replacement for `graphql` decorator from `react-apollo` package.
 
+**Under development, API can change**
+
 `npm install --save react-apollo-graphql`
 
 It provides:
@@ -158,6 +160,48 @@ const fetchers = {
 />
 ```
 
+### Fragments
+
+In order to use fragments (you can simulate partial results using fragments), user has to first initialize them. Fragments are initialized with `client`, previous `props` and current `props` on `componentWillMount` and every update if `props` used by given fragment have changed. If props have not changed and you don't want fragment to fetch data on every update, return `false`.
+
+```js
+// @flow
+
+import type { QueryInitializerOptions } from 'react-apollo-graphql';
+import type { ApolloClient, FragmentResult } from 'react-apollo-graphql/lib/types';
+
+const fragments = {
+  // user detail will be resolved on componentWillMount and on every update if props
+  // used as variables have changed
+  userDetail: (
+    client: ApolloClient,
+    previousProps: ?Object,
+    currentProps: Object
+  ): FragmentResult<{ __typename: 'User', id: number, name: string }> => {
+    if (previousProps && previousProps.id === currentProps.id) {
+      return false;
+    }
+
+    return client.readFragment({
+      id: `User:${currentProps.id}`,
+      fragment: gql`fragment userDetails on User { __typename, id, name }`,
+    });
+  }
+};
+
+<GraphQL
+  fragments={fragments}
+  id={10}
+  render={(queries, mutations, fetchers, fragments, props) => {
+    expect(fragments.userDetail).toEqual({
+      __typename: 'User',
+      id: 10,
+      name: 'Fero',
+    });
+  }}
+/>
+```
+
 ## Server side render
 
 For server side rendering you need to:
@@ -236,10 +280,15 @@ export type QueryInitializerOptions = {
 };
 ```
 
-### `<GraphQL fetchers?={Fetchers} queries?={Queries} mutations?={Mutations} render={RenderFunction} />`
+### `<GraphQL fetchers?={Fetchers} fragments?={Fragments} queries?={Queries} mutations?={Mutations} render={RenderFunction} />`
 
-* `Fetchers = { [key: string]: (client: ApolloClient: props: Object) => (...args: any) => Promise<QueryResult<*>>}`
-  * `optional` prop, object with fetchers' initialier
+* `Fragments = { [key: string]: (client: ApolloClient, previousProps: ?Object, currentProps: Object) => FragmentResult<any> }`
+  * `optional` prop, object with fragments' initializer
+  * **each initializer will be initialized with Apollo client, previousProps and props passed to the initializer on each mount and update**
+  * **each initializer is update only if it does not return false**
+  * each initializer has to return `false` or result of `client.readFragment()` (this means that it has to call the [`client.readFragment() method`](http://dev.apollodata.com/core/apollo-client-api.html#ApolloClient\.readFragment))
+* `Fetchers = { [key: string]: (client: ApolloClient, props: Object) => (...args: any) => Promise<QueryResult<*>>}`
+  * `optional` prop, object with fetchers' initializer
   * **each initializer will be initialized with apollo client and props passed to the initializer on each render (on mount and every update)**
   * each initializer has to return `(...args: any) => Promise<QueryResult<*>>` (this means that it has to call the [`client.query() method`](http://dev.apollodata.com/core/apollo-client-api.html#ApolloClient\.query))
 * `Queries = { [key: string]: (client: ApolloClient, props: Object, options: QueryInitializerOptions) => ObservableQuery<*> }`

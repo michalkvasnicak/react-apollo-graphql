@@ -1,6 +1,7 @@
 // @flow
 
 import ApolloClient from 'apollo-client';
+import createStepper from '../test/stepper';
 import gql from 'graphql-tag';
 import React from 'react';
 import { mockNetworkInterface } from 'apollo-test-utils';
@@ -8,38 +9,6 @@ import { mount, shallow } from 'enzyme';
 
 import GraphQL, { type Queries } from './';
 import { type ObservableQuery } from './types';
-
-function createStepper(steps: Array<Function>): { promise: Promise<any>, renderer: Function } {
-  let step = 0;
-  let resolve: any = null;
-  let reject: any = null;
-
-  const promise = new Promise((res, rej) => {
-    resolve = res;
-    reject = rej;
-  });
-
-  return {
-    promise,
-    renderer: (...args) => {
-      if (steps.length <= step) {
-        reject(new Error(`There is no step for index ${step}`));
-      } else {
-        try {
-          steps[step++](...args);
-
-          if (step >= steps.length) {
-            resolve();
-          }
-        } catch (e) {
-          reject(e);
-        }
-      }
-
-      return <div />;
-    },
-  };
-}
 
 describe('GraphQL component', () => {
   it('throws if apollo client is not specified in context or prop', () => {
@@ -252,6 +221,7 @@ describe('GraphQL component', () => {
             observer: renderer.mock.calls[0][0].testQuery.observer,
           },
         },
+        {},
         {},
         {},
         wrapper.props(),
@@ -539,6 +509,201 @@ describe('GraphQL component', () => {
       };
 
       shallow(<GraphQL mutations={mutations} render={renderer} />, { context: { client } });
+    });
+  });
+
+  describe('fragments', () => {
+    it('passes empty fragments object to render function', async () => {
+      const client = new ApolloClient({
+        networkInterface: mockNetworkInterface(),
+      });
+      const steps = [
+        (q, m, f, fragments) => {
+          expect(fragments).toEqual({});
+        },
+      ];
+      const stepper = createStepper(steps);
+
+      // first render as a render prop
+      shallow(<GraphQL client={client} render={stepper.renderer} />);
+
+      await stepper.promise;
+    });
+
+    it('passes fragments object to render function', async () => {
+      const fragment = gql`
+        fragment userDetail on User {
+          __typename
+          id
+          email
+          name
+        }
+      `;
+      const userQuery = gql`
+        query user($id: Int!) {
+          user {
+            ...userDetail
+          }
+        }
+
+        ${fragment}
+      `;
+      const client = new ApolloClient({
+        dataIdFromObject(obj: { __typename: ?string, id: any }) {
+          if (obj.__typename && obj.id != null) {
+            return `${obj.__typename}-${obj.id}`;
+          }
+
+          return undefined;
+        },
+      });
+
+      client.writeQuery({
+        data: { user: { __typename: 'User', id: 11, email: 'test@test', name: 'Fero' } },
+        query: userQuery,
+        variables: { id: 11 },
+      });
+
+      const fragments = {
+        userDetail: client =>
+          client.readFragment({
+            id: 'User-11',
+            fragment: gql`
+              fragment userDetail on User {
+                __typename
+                id
+                email
+                name
+              }
+            `,
+          }),
+      };
+
+      const stepper = createStepper([
+        // on first call we expect queries to be in loading state with null data
+        (queries, mutations, fetchers, fr) => {
+          expect(fr.userDetail).toEqual({
+            __typename: 'User',
+            id: 11,
+            email: 'test@test',
+            name: 'Fero',
+          });
+        },
+      ]);
+
+      shallow(<GraphQL render={stepper.renderer} fragments={fragments} />, { context: { client } });
+
+      await stepper.promise;
+    });
+
+    it('refetches a fragment only if props has changed', async () => {
+      const fragment = gql`
+        fragment userDetail on User {
+          __typename
+          id
+          email
+          name
+        }
+      `;
+      const userQuery = gql`
+        query user($id: Int!) {
+          user {
+            ...userDetail
+          }
+        }
+
+        ${fragment}
+      `;
+      const client = new ApolloClient({
+        dataIdFromObject(obj: { __typename: ?string, id: any }) {
+          if (obj.__typename && obj.id != null) {
+            return `${obj.__typename}-${obj.id}`;
+          }
+
+          return undefined;
+        },
+      });
+
+      client.writeQuery({
+        data: { user: { __typename: 'User', id: 11, email: 'test@test', name: 'Fero' } },
+        query: userQuery,
+        variables: { id: 11 },
+      });
+
+      client.writeQuery({
+        data: { user: { __typename: 'User', id: 12, email: 'test@test.2', name: 'Fero 2' } },
+        query: userQuery,
+        variables: { id: 12 },
+      });
+
+      const stepper = createStepper([
+        (queries, mutations, fetchers, fr) => {
+          expect(fr.userDetail).toEqual({
+            __typename: 'User',
+            id: 11,
+            email: 'test@test',
+            name: 'Fero',
+          });
+        },
+        (queries, mutations, fetchers, fr) => {
+          expect(fr.userDetail).toEqual({
+            __typename: 'User',
+            id: 12,
+            email: 'test@test.2',
+            name: 'Fero 2',
+          });
+        },
+        (queries, mutations, fetchers, fr) => {
+          expect(fr.userDetail).toEqual({
+            __typename: 'User',
+            id: 12,
+            email: 'test@test.2',
+            name: 'Fero 2',
+          });
+        },
+        (queries, mutations, fetchers, fr) => {
+          expect(fr.userDetail).toEqual({
+            __typename: 'User',
+            id: 11,
+            email: 'test@test',
+            name: 'Fero',
+          });
+        },
+        (queries, mutations, fetchers, fr) => {
+          expect(fr.userDetail).toEqual(null);
+        },
+      ]);
+
+      const fragments = {
+        userDetail: (client, previousProps, currentProps) => {
+          if (previousProps && previousProps.id === currentProps.id) {
+            return false;
+          }
+
+          return client.readFragment({
+            id: `User-${currentProps.id}`,
+            fragment: gql`
+              fragment userDetail on User {
+                __typename
+                id
+                email
+                name
+              }
+            `,
+          });
+        },
+      };
+
+      const wrapper = shallow(<GraphQL id={11} render={stepper.renderer} fragments={fragments} />, {
+        context: { client },
+      });
+
+      wrapper.setProps({ id: 12 });
+      wrapper.setProps({ id: 12 });
+      wrapper.setProps({ id: 11 });
+      wrapper.setProps({ id: 13 });
+
+      await stepper.promise;
     });
   });
 });

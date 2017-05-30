@@ -18,6 +18,10 @@ export type FetchPolicy =
   | 'cache-only'
   | 'standby';
 
+export type FragmentInitializerResult<T> = ?T | false;
+
+export type FragmentResult<T> = ?T;
+
 // this is query result from client.query() or client.watchQuery().subscribe({ next });
 export type QueryResult<T> = {
   data: T,
@@ -178,6 +182,8 @@ export class ApolloError extends Error {
 }
 
 export type ApolloClient = {
+  readFragment<T>(options: DataProxyReadFragmentOptions): FragmentResult<T>,
+  readQuery<T>(options: DataProxyReadQueryOptions): T,
   query(options: {
     fetchPolicy?: FetchPolicy,
     metadata?: any,

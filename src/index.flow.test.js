@@ -2,7 +2,13 @@
 
 import GraphQL, { type QueryInitializerOptions } from './';
 import React from 'react';
-import type { ApolloClient, ObservableQuery, QueryResult, ResultTypeToResultObject } from './types';
+import type {
+  ApolloClient,
+  FragmentResult,
+  ObservableQuery,
+  QueryResult,
+  ResultTypeToResultObject,
+} from './types';
 
 // test GraphQL component
 (function() {
@@ -52,6 +58,30 @@ import type { ApolloClient, ObservableQuery, QueryResult, ResultTypeToResultObje
       (f.search: (query: string) => Promise<QueryResult<{ results: Array<{ id: number }> }>>);
       // $FlowExpectError
       (f.search: (query: string) => Promise<QueryResult<{ results: Array<{ id: string }> }>>);
+
+      return <div />;
+    }}
+  />;
+
+  // test fragments
+  const fragments: {
+    userDetail: (
+      client: ApolloClient,
+      previousProps: ?Object,
+      currentProps: Object,
+    ) => FragmentResult<{ id: number, name: string }>,
+  } = ({}: any);
+
+  <GraphQL
+    fragments={fragments}
+    render={(q, m, f, fr) => {
+      (fr.userDetail: ?{ id: number, name: string });
+      // $FlowExpectError
+      (fr.userDetail: { id: number, name: string });
+      // $FlowExpectError
+      (fr.userDetail: ?{ id: string, name: string });
+      // $FlowExpectError
+      (fr.userDetail: ?{ id: number, name: number });
 
       return <div />;
     }}

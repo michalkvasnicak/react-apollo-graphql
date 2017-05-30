@@ -6,6 +6,8 @@ import { getDataFromTree } from './server';
 import {
   type ApolloClient,
   type CurrentQueryResult,
+  type FragmentInitializerResult,
+  type FragmentResult,
   type ObservableQuery,
   type QueryResult,
   type Subscription,
@@ -50,6 +52,14 @@ type FetchersInitializers = {
   [key: string]: (client: ApolloClient, ownProps: Object) => Fetcher,
 };
 
+type FragmentsInitializers = {
+  [key: string]: (
+    client: ApolloClient,
+    previousProps: ?Object,
+    currentProps: Object,
+  ) => FragmentResult<any>,
+};
+
 // not used because of
 // https://github.com/facebook/flow/issues/3986
 type DefaultProps = {
@@ -57,9 +67,15 @@ type DefaultProps = {
   queries: Queries,
 };
 
-type Props<F: FetchersInitializers, Q: Queries, M: MutationsInitializers> = {
+type Props<
+  FR: FragmentsInitializers,
+  F: FetchersInitializers,
+  Q: Queries,
+  M: MutationsInitializers,
+> = {
   client?: ApolloClient,
   fetchers?: F,
+  fragments?: FR,
   mutations?: M,
   queries?: Q,
   render: (
@@ -80,6 +96,16 @@ type Props<F: FetchersInitializers, Q: Queries, M: MutationsInitializers> = {
         (client: ApolloClient, ownProps: Object) => A,
       ) => A,
     >,
+    fragments: $ObjMap<
+      FR,
+      <A>(
+        (
+          client: ApolloClient,
+          previousProps: ?Object,
+          currentProps: Object,
+        ) => FragmentInitializerResult<A>,
+      ) => FragmentResult<A>,
+    >,
     props: *,
   ) => React$Element<any>,
 };
@@ -88,7 +114,7 @@ type Props<F: FetchersInitializers, Q: Queries, M: MutationsInitializers> = {
 // on server we have only 1 pass, so we can halt execution on all queries passed to GraphQL
 // then wait for them to resolve, and call render function and repeat these steps
 // until we have no more queries to process
-export default class GraphQL extends React.Component<void, Props<*, *, *>, void> {
+export default class GraphQL extends React.Component<void, Props<*, *, *, *>, void> {
   static contextTypes = {
     client: PropTypes.object,
   };
@@ -100,6 +126,8 @@ export default class GraphQL extends React.Component<void, Props<*, *, *>, void>
   };*/
 
   context: { client: ?ApolloClient };
+  fragments: { [key: string]: FragmentResult<any> } = {};
+  fragmentsProps: { [key: string]: ?Object } = {};
   fetchers: { [key: string]: Fetcher } = {};
   hasMount: boolean = false;
   mutations: { [key: string]: Mutation } = {};
@@ -108,10 +136,10 @@ export default class GraphQL extends React.Component<void, Props<*, *, *>, void>
   } = {};
   subscriptions: { [key: string]: Subscription } = {};
 
-  constructor(props: Props<*, *, *>, context: Object) {
+  constructor(props: Props<*, *, *, *>, context: Object) {
     super(props, context);
 
-    const { fetchers = {}, mutations = {}, queries = {}, render } = this.props;
+    const { fetchers = {}, fragments = {}, mutations = {}, queries = {}, render } = this.props;
     const client = this.getClient();
 
     // now process queries in props and assign subscriptions to internal state
@@ -148,6 +176,8 @@ export default class GraphQL extends React.Component<void, Props<*, *, *>, void>
 
     this.initializeFetchers(fetchers, this.props);
     this.initializeMutations(mutations, this.props);
+
+    this.fetchFragments(fragments, this.props);
   }
 
   componentWillMount() {
@@ -176,6 +206,9 @@ export default class GraphQL extends React.Component<void, Props<*, *, *>, void>
 
     // reinitialize fetchers
     this.initializeFetchers(nextProps.fetchers, nextProps);
+
+    // fetch fragments
+    this.fetchFragments(nextProps.fragments, nextProps);
   };
 
   getClient = (): ApolloClient => {
@@ -206,6 +239,33 @@ export default class GraphQL extends React.Component<void, Props<*, *, *>, void>
     });
     this.subscriptions = {};
   }
+
+  fetchFragments = (fragments: FragmentsInitializers = {}, props: Object) => {
+    const client = this.getClient();
+    this.fragments = Object.keys(fragments).reduce((results, fragmentName) => {
+      const previousProps = this.fragmentsProps[fragmentName];
+      const previousData = this.fragments[fragmentName];
+      let data = null;
+
+      try {
+        data = fragments[fragmentName](client, previousProps, props);
+
+        // use previous data if props used as variables in fragments have not changed
+        if (data === false) {
+          data = previousData;
+        }
+      } catch (e) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.error(e);
+        }
+      }
+
+      return {
+        ...results,
+        [fragmentName]: data,
+      };
+    }, {});
+  };
 
   initializeFetchers = (fetchers: { [key: string]: Fetcher } = {}, props: Object) => {
     const client = this.getClient();
@@ -252,7 +312,7 @@ export default class GraphQL extends React.Component<void, Props<*, *, *>, void>
       {},
     );
 
-    return render(queries, this.mutations, this.fetchers, this.props);
+    return render(queries, this.mutations, this.fetchers, this.fragments, this.props);
   }
 }
 
