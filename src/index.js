@@ -85,15 +85,11 @@ type Props<F: FetchersInitializers, Q: Queries, M: MutationsInitializers> = {
   ) => React$Element<any>,
 };
 
-type State = {
-  [key: string]: CurrentQueryResult<*>,
-};
-
 // add server side render
 // on server we have only 1 pass, so we can halt execution on all queries passed to GraphQL
 // then wait for them to resolve, and call render function and repeat these steps
 // until we have no more queries to process
-export default class GraphQL extends React.Component<void, Props<*, *, *>, State> {
+export default class GraphQL extends React.Component<void, Props<*, *, *>, void> {
   static contextTypes = {
     client: PropTypes.object,
   };
@@ -109,7 +105,6 @@ export default class GraphQL extends React.Component<void, Props<*, *, *>, State
   observers: {
     [key: string]: { options: ObservableQueryOptions, observer: ObservableQuery<*> },
   } = {};
-  state = {};
   subscriptions: { [key: string]: Subscription } = {};
 
   constructor(props: Props<*, *, *>, context: Object) {
@@ -120,9 +115,7 @@ export default class GraphQL extends React.Component<void, Props<*, *, *>, State
 
     // now process queries in props and assign subscriptions to internal state
     // so we can ubsubscribe from them on unmount
-    // alse create state so we can update this component's state in response
-    // to observable changes
-    const results = Object.keys(queries).reduce((state, key) => {
+    Object.keys(queries).forEach(key => {
       const options = {
         hasVariablesChanged: () => false,
       };
@@ -145,19 +138,12 @@ export default class GraphQL extends React.Component<void, Props<*, *, *>, State
 
       // subscribe to changes
       const subscription = observer.subscribe({
-        next: () => this.updateResults(key, observer.currentResult()),
-        error: () => this.updateResults(key, observer.currentResult()),
+        next: () => this.forceRerender(),
+        error: () => this.forceRerender(),
       });
 
       this.subscriptions[key] = subscription;
-
-      return {
-        ...state,
-        [key]: observer.currentResult(),
-      };
-    }, {});
-
-    this.state = results;
+    });
   }
 
   componentWillMount() {
@@ -211,15 +197,12 @@ export default class GraphQL extends React.Component<void, Props<*, *, *>, State
     this.subscriptions = {};
   }
 
-  updateResults = (key: string, result: CurrentQueryResult<*>) => {
+  forceRerender = () => {
     if (!this.hasMount) {
       return;
     }
 
-    this.setState(state => ({
-      ...state,
-      [key]: result,
-    }));
+    this.setState({});
   };
 
   render() {
@@ -243,12 +226,12 @@ export default class GraphQL extends React.Component<void, Props<*, *, *>, State
       {},
     );
 
-    const queries = Object.keys(this.state).reduce(
+    const queries = Object.keys(this.observers).reduce(
       (res, key) => ({
         ...res,
         [key]: {
           observer: this.observers[key].observer,
-          ...this.state[key],
+          ...this.observers[key].observer.currentResult(),
         },
       }),
       {},

@@ -54,6 +54,7 @@ export async function getDataFromTree(
 
       // is this GraphQL component?
       if (element.type === GraphQL) {
+        // stop polling on all queries just in case
         // wait for all queries to resolve
         await Promise.all(
           instance.getObservers().map(
