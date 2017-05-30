@@ -1,3 +1,13 @@
+## 0.9.0 [30.05.2017]
+
+Changes:
+
+* results of observable queries are not stored in state now
+
+New features:
+
+* added support for fragments so users can simulate partial results if they wish
+
 ## 0.8.2 [29.05.2017]
 
 Fixed bugs:
