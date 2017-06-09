@@ -57,16 +57,17 @@ export async function getDataFromTree(
         // stop polling on all queries just in case
         // wait for all queries to resolve
         await Promise.all(
-          instance.getObservers().map(
-            observer =>
-              new Promise((resolve, reject) => {
-                try {
-                  observer.result().then(() => resolve(), () => resolve());
-                } catch (e) {
-                  reject(e);
-                }
-              }),
-          ),
+          instance.getObservers().map(observer => {
+            observer.stopPolling();
+
+            return new Promise((resolve, reject) => {
+              try {
+                observer.result().then(() => resolve(), () => resolve());
+              } catch (e) {
+                reject(e);
+              }
+            });
+          }),
         );
       }
 
