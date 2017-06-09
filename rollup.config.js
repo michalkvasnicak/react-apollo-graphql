@@ -26,10 +26,12 @@ export default {
   moduleName: 'GraphQL',
   targets,
   plugins: [
-    nodeResolve(),
+    // follow externals only for minified build
+    isProduction && nodeResolve(),
     commonjs(),
     babel({
       babelrc: false,
+      runtimeHelpers: true,
       presets: [
         [
           'env',
@@ -43,6 +45,10 @@ export default {
       plugins: [
         !isProduction && 'flow-react-proptypes',
         isProduction && 'transform-react-remove-prop-types',
+        !isProduction && [
+          'transform-runtime',
+          { helpers: false, polyfill: false, regenerator: true },
+        ],
         'transform-flow-strip-types',
         'transform-class-properties',
         'transform-object-rest-spread',
