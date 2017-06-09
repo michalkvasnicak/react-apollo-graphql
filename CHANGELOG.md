@@ -1,3 +1,9 @@
+## 0.9.2 [09.07.2017]
+
+Bug fixes:
+
+* changed build configuration to import babel-runtime in non minified builds (get rid of regeneratorRuntime undefined)
+
 ## 0.9.1 [09.07.2017]
 
 Changes:
