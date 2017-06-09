@@ -1,3 +1,9 @@
+## 0.9.1 [09.07.2017]
+
+Changes:
+
+* stops polling observable queries immediately after start on server side
+
 ## 0.9.0 [30.05.2017]
 
 Changes:
