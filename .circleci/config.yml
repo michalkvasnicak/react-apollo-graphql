@@ -1,0 +1,35 @@
+version: 2
+
+jobs:
+  build:
+    working_directory: ~/react-apollo-graphql
+    docker:
+      - image: circleci/node:8.2.1
+        environment:
+          CI: 1
+    steps:
+      - checkout
+      - restore_cache:
+          key: yarndeps-{{ .Branch }}-{{ checksum "yarn.lock" }}
+      - run:
+          name: Installing javascript dependencies
+          command: yarn install --cache-folder ~/.yarn-cache
+      - save_cache:
+          key: yarndeps-{{ .Branch }}-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.yarn-cache
+      - run:
+          name: Linting the source code
+          command: yarn lint
+      - run:
+          name: Typechecking the source code
+          command: yarn flow
+      - run:
+          name: Testing the source code
+          command: yarn test -- --runInBand
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - build
