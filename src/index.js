@@ -3,16 +3,16 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { getDataFromTree } from './server';
-import type {
-  ApolloClient,
-  CurrentQueryResult,
-  FragmentInitializerResult,
-  FragmentResult,
-  MutationResult,
-  ObservableQuery,
-  QueryResult,
-  Subscription,
-  ResultTypeToResultObject,
+import {
+  type ApolloClient,
+  type CurrentQueryResult,
+  type FragmentInitializerResult,
+  type FragmentResult,
+  type MutationResult,
+  type ObservableQuery,
+  type QueryResult,
+  type Subscription,
+  type ResultTypeToResultObject,
 } from './types';
 
 type ObservableQueryOptions = {

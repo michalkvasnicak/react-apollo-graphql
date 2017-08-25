@@ -5,26 +5,27 @@ import uglify from 'rollup-plugin-uglify';
 import visualizer from 'rollup-plugin-visualizer';
 
 const isProduction = process.env.PRODUCTION;
-const targets = isProduction
-  ? [{ dest: 'dist/react-apollo-graphql.min.js', format: 'umd' }]
+const output = isProduction
+  ? [{ file: 'dist/react-apollo-graphql.min.js', format: 'umd', exports: 'named' }]
   : [
       {
-        dest: 'dist/react-apollo-graphql.es.js',
+        file: 'dist/react-apollo-graphql.es.js',
         format: 'es',
+        exports: 'named',
       },
       {
-        dest: 'dist/react-apollo-graphql.js',
+        file: 'dist/react-apollo-graphql.js',
         format: 'umd',
+        exports: 'named',
       },
     ];
 
 export default {
   globals: { react: 'React', 'prop-types': 'PropTypes' },
-  entry: 'src/index.js',
+  input: 'src/index.js',
   external: ['prop-types', 'react'],
-  exports: 'named',
-  moduleName: 'GraphQL',
-  targets,
+  name: 'GraphQL',
+  output,
   plugins: [
     // follow externals only for minified build
     isProduction && nodeResolve(),
