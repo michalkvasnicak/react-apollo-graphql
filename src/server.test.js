@@ -21,7 +21,15 @@ function App(props: { client: Client }) {
             client: Client,
           ): ObservableQuery<{ user: { __typename: string, id: number, email: string } }> =>
             client.watchQuery({
-              query: gql`{ user { __typename, id, email }}`,
+              query: gql`
+                {
+                  user {
+                    __typename
+                    id
+                    email
+                  }
+                }
+              `,
             }),
         }}
         render={({ user: { loading, data } }) => {
@@ -39,7 +47,18 @@ function App(props: { client: Client }) {
                   user: { __typename: string, id: number, projects: Array<{ id: number }> },
                 }> =>
                   client.watchQuery({
-                    query: gql`{ user { __typename, id, projects { __typename, id } } }`,
+                    query: gql`
+                      {
+                        user {
+                          __typename
+                          id
+                          projects {
+                            __typename
+                            id
+                          }
+                        }
+                      }
+                    `,
                   }),
               }}
               render={({ projects: { data } }) => {
@@ -49,7 +68,11 @@ function App(props: { client: Client }) {
 
                 return (
                   <ul>
-                    {data.user.projects.map(project => <li key={project.id}>{project.id}</li>)}
+                    {data.user.projects.map(project =>
+                      <li key={project.id}>
+                        {project.id}
+                      </li>,
+                    )}
                   </ul>
                 );
               }}
@@ -67,7 +90,15 @@ describe('server side render', () => {
       networkInterface: mockNetworkInterface(
         {
           request: {
-            query: gql`{ user { __typename, id, email }}`,
+            query: gql`
+              {
+                user {
+                  __typename
+                  id
+                  email
+                }
+              }
+            `,
           },
           result: {
             data: {
@@ -81,7 +112,18 @@ describe('server side render', () => {
         },
         {
           request: {
-            query: gql`{ user { __typename, id, projects { __typename, id } }}`,
+            query: gql`
+              {
+                user {
+                  __typename
+                  id
+                  projects {
+                    __typename
+                    id
+                  }
+                }
+              }
+            `,
           },
           result: {
             data: {
@@ -117,7 +159,7 @@ describe('react-router ssr', () => {
             <Route
               exact
               path="/"
-              render={() => (
+              render={() =>
                 <GraphQL
                   client={props.client}
                   queries={{
@@ -125,7 +167,14 @@ describe('react-router ssr', () => {
                       client: Client,
                     ): ObservableQuery<{ projects: Array<{ id: number, title: string }> }> =>
                       client.watchQuery({
-                        query: gql`{ projects { id, title } }`,
+                        query: gql`
+                          {
+                            projects {
+                              id
+                              title
+                            }
+                          }
+                        `,
                       }),
                   }}
                   render={({ projects: { error, loading, data: { projects } } }) => {
@@ -135,16 +184,19 @@ describe('react-router ssr', () => {
 
                     return (
                       <ul>
-                        {projects.map(project => <li key={project.id}>{project.title}</li>)}
+                        {projects.map(project =>
+                          <li key={project.id}>
+                            {project.title}
+                          </li>,
+                        )}
                       </ul>
                     );
                   }}
-                />
-              )}
+                />}
             />
             <Route
               path="/projects/:id"
-              render={({ match }) => (
+              render={({ match }) =>
                 <GraphQL
                   client={props.client}
                   queries={{
@@ -152,7 +204,14 @@ describe('react-router ssr', () => {
                       client: Client,
                     ): ObservableQuery<{ project: { id: number, title: string } }> =>
                       client.watchQuery({
-                        query: gql`query project($id: Int!) { project(id: $id) { id, title } }`,
+                        query: gql`
+                          query project($id: Int!) {
+                            project(id: $id) {
+                              id
+                              title
+                            }
+                          }
+                        `,
                         variables: { id: match.params.id },
                       }),
                   }}
@@ -163,16 +222,22 @@ describe('react-router ssr', () => {
 
                     return (
                       <div>
-                        <h1>{project.data.project.title}</h1>
+                        <h1>
+                          {project.data.project.title}
+                        </h1>
                         <Route
                           path="/projects/:id/detail"
-                          render={() => (
+                          render={() =>
                             <GraphQL
                               client={props.client}
                               queries={{
                                 detail: (client: Client): ObservableQuery<{ id: number }> =>
                                   client.watchQuery({
-                                    query: gql`{ id }`,
+                                    query: gql`
+                                      {
+                                        id
+                                      }
+                                    `,
                                   }),
                               }}
                               render={queries => {
@@ -185,16 +250,18 @@ describe('react-router ssr', () => {
                                   return <span>loading</span>;
                                 }
 
-                                return <h2>{queries.detail.data.id}</h2>;
+                                return (
+                                  <h2>
+                                    {queries.detail.data.id}
+                                  </h2>
+                                );
                               }}
-                            />
-                          )}
+                            />}
                         />
                       </div>
                     );
                   }}
-                />
-              )}
+                />}
             />
           </Switch>
         </div>
@@ -208,7 +275,15 @@ describe('react-router ssr', () => {
     let client = new ApolloClient({
       networkInterface: mockNetworkInterface({
         request: {
-          query: gql`{ projects { id, title, __typename } }`,
+          query: gql`
+            {
+              projects {
+                id
+                title
+                __typename
+              }
+            }
+          `,
         },
         result: {
           data: { projects: [{ __typename: 'Project', id: 1, title: 'Test' }] },
@@ -217,7 +292,9 @@ describe('react-router ssr', () => {
     });
 
     const homepage = (
-      <StaticRouter location="/" context={context}><TestApp client={client} /></StaticRouter>
+      <StaticRouter location="/" context={context}>
+        <TestApp client={client} />
+      </StaticRouter>
     );
 
     await getDataFromTree(homepage);
@@ -230,7 +307,15 @@ describe('react-router ssr', () => {
     client = new ApolloClient({
       networkInterface: mockNetworkInterface({
         request: {
-          query: gql`query project($id: Int!) { project(id: $id) { id, title, __typename } }`,
+          query: gql`
+            query project($id: Int!) {
+              project(id: $id) {
+                id
+                title
+                __typename
+              }
+            }
+          `,
           variables: { id: '10' },
         },
         result: {
@@ -255,7 +340,15 @@ describe('react-router ssr', () => {
       networkInterface: mockNetworkInterface(
         {
           request: {
-            query: gql`query project($id: Int!) { project(id: $id) { id, title, __typename } }`,
+            query: gql`
+              query project($id: Int!) {
+                project(id: $id) {
+                  id
+                  title
+                  __typename
+                }
+              }
+            `,
             variables: { id: '10' },
           },
           result: {
@@ -264,7 +357,11 @@ describe('react-router ssr', () => {
         },
         {
           request: {
-            query: gql`{ id }`,
+            query: gql`
+              {
+                id
+              }
+            `,
           },
           result: {
             data: { id: 1 },
@@ -290,7 +387,15 @@ describe('react-router ssr', () => {
       networkInterface: mockNetworkInterface(
         {
           request: {
-            query: gql`query project($id: Int!) { project(id: $id) { id, title, __typename } }`,
+            query: gql`
+              query project($id: Int!) {
+                project(id: $id) {
+                  id
+                  title
+                  __typename
+                }
+              }
+            `,
             variables: { id: '10' },
           },
           result: {
@@ -299,7 +404,11 @@ describe('react-router ssr', () => {
         },
         {
           request: {
-            query: gql`{ id }`,
+            query: gql`
+              {
+                id
+              }
+            `,
           },
           result: {
             errors: [{ message: 'not found' }],

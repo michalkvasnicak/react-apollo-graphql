@@ -41,7 +41,11 @@ describe('GraphQL component', () => {
       const client = new ApolloClient({
         networkInterface: mockNetworkInterface({
           request: {
-            query: gql`{ id }`,
+            query: gql`
+              {
+                id
+              }
+            `,
           },
           result: {
             data: { id: 1 },
@@ -69,7 +73,11 @@ describe('GraphQL component', () => {
       const queries: Queries = {
         testQuery: (client, props) =>
           client.watchQuery({
-            query: gql`{ id }`,
+            query: gql`
+              {
+                id
+              }
+            `,
           }),
       };
 
@@ -84,7 +92,11 @@ describe('GraphQL component', () => {
         networkInterface: mockNetworkInterface(
           {
             request: {
-              query: gql`{ id }`,
+              query: gql`
+                {
+                  id
+                }
+              `,
             },
             result: {
               data: { id: 1 },
@@ -93,7 +105,11 @@ describe('GraphQL component', () => {
           },
           {
             request: {
-              query: gql`{ id }`,
+              query: gql`
+                {
+                  id
+                }
+              `,
             },
             result: {
               data: { id: 1 },
@@ -123,7 +139,11 @@ describe('GraphQL component', () => {
       const queries: Queries = {
         testQuery: (client, props): ObservableQuery<{ id: number }> =>
           client.watchQuery({
-            query: gql`{ id }`,
+            query: gql`
+              {
+                id
+              }
+            `,
           }),
       };
 
@@ -138,13 +158,21 @@ describe('GraphQL component', () => {
         networkInterface: mockNetworkInterface(
           {
             request: {
-              query: gql`{ id }`,
+              query: gql`
+                {
+                  id
+                }
+              `,
             },
             error: new Error('Abwab'),
           },
           {
             request: {
-              query: gql`{ id }`,
+              query: gql`
+                {
+                  id
+                }
+              `,
             },
             error: new Error('Abwab 2'),
           },
@@ -176,7 +204,11 @@ describe('GraphQL component', () => {
       const queries: Queries = {
         testQuery: (client, props) =>
           client.watchQuery({
-            query: gql`{ id }`,
+            query: gql`
+              {
+                id
+              }
+            `,
           }),
       };
 
@@ -189,7 +221,11 @@ describe('GraphQL component', () => {
       const client = new ApolloClient({
         networkInterface: mockNetworkInterface({
           request: {
-            query: gql`{ id }`,
+            query: gql`
+              {
+                id
+              }
+            `,
           },
           error: new Error('Abwab'),
         }),
@@ -197,7 +233,11 @@ describe('GraphQL component', () => {
       const queries: Queries = {
         testQuery: (client, props) =>
           client.watchQuery({
-            query: gql`{ id }`,
+            query: gql`
+              {
+                id
+              }
+            `,
           }),
       };
       const renderer = jest.fn(() => <div />);
@@ -233,7 +273,11 @@ describe('GraphQL component', () => {
         networkInterface: mockNetworkInterface(
           {
             request: {
-              query: gql`{ id }`,
+              query: gql`
+                {
+                  id
+                }
+              `,
             },
             result: {
               data: { id: 1 },
@@ -241,7 +285,11 @@ describe('GraphQL component', () => {
           },
           {
             request: {
-              query: gql`{ id }`,
+              query: gql`
+                {
+                  id
+                }
+              `,
             },
             result: {
               data: { id: 1 },
@@ -255,7 +303,11 @@ describe('GraphQL component', () => {
           observer = client.watchQuery({
             notifyOnNetworkStatusChange: true,
             pollInterval: 10,
-            query: gql`{ id }`,
+            query: gql`
+              {
+                id
+              }
+            `,
           });
 
           // $FlowExpectError
@@ -318,7 +370,11 @@ describe('GraphQL component', () => {
         networkInterface: mockNetworkInterface(
           {
             request: {
-              query: gql`query test($id: Int!, $text: String!){ parse(id: $id, text: $text) }`,
+              query: gql`
+                query test($id: Int!, $text: String!) {
+                  parse(id: $id, text: $text)
+                }
+              `,
               variables: { id: 1, text: '' },
             },
             result: {
@@ -327,7 +383,11 @@ describe('GraphQL component', () => {
           },
           {
             request: {
-              query: gql`query test($id: Int!, $text: String!){ parse(id: $id, text: $text) }`,
+              query: gql`
+                query test($id: Int!, $text: String!) {
+                  parse(id: $id, text: $text)
+                }
+              `,
               variables: { id: 11, text: 'Test' },
             },
             result: {
@@ -352,7 +412,11 @@ describe('GraphQL component', () => {
           });
 
           observer = client.watchQuery({
-            query: gql`query test($id: Int!, $text: String!){ parse(id: $id, text: $text) }`,
+            query: gql`
+              query test($id: Int!, $text: String!) {
+                parse(id: $id, text: $text)
+              }
+            `,
             variables: { id: 1, text: '' },
           });
 
@@ -498,7 +562,11 @@ describe('GraphQL component', () => {
 
           return () =>
             client.mutate({
-              mutation: gql`mutation a { add }`,
+              mutation: gql`
+                mutation a {
+                  add
+                }
+              `,
             });
         },
       };

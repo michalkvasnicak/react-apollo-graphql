@@ -3,14 +3,16 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { getDataFromTree } from './server';
-import {
-  type ApolloClient,
-  type CurrentQueryResult,
-  type FragmentInitializerResult,
-  type FragmentResult,
-  type ObservableQuery,
-  type QueryResult,
-  type Subscription,
+import type {
+  ApolloClient,
+  CurrentQueryResult,
+  FragmentInitializerResult,
+  FragmentResult,
+  MutationResult,
+  ObservableQuery,
+  QueryResult,
+  Subscription,
+  ResultTypeToResultObject,
 } from './types';
 
 type ObservableQueryOptions = {
@@ -40,7 +42,7 @@ export type Queries = {
   ) => ObservableQuery<any>,
 };
 
-type Mutation = (...args: any) => Promise<QueryResult<any>>;
+type Mutation = (...args: any) => Promise<MutationResult<any>>;
 
 type MutationsInitializers = {
   [key: string]: (client: ApolloClient, ownProps: Object) => Mutation,
@@ -87,7 +89,7 @@ type Props<
           ownProps: Object,
           options: QueryInitializerOptions,
         ) => ObservableQuery<A>,
-      ) => CurrentQueryResult<$ObjMap<A, <B>(B) => ?B>> & { observer: ObservableQuery<A> },
+      ) => ResultTypeToResultObject<A>,
     >,
     mutations: $ObjMap<M, <V>((client: ApolloClient, ownProps: Object) => V) => V>,
     fetchers: $ObjMap<
@@ -114,7 +116,7 @@ type Props<
 // on server we have only 1 pass, so we can halt execution on all queries passed to GraphQL
 // then wait for them to resolve, and call render function and repeat these steps
 // until we have no more queries to process
-export default class GraphQL extends React.Component<void, Props<*, *, *, *>, void> {
+export default class GraphQL extends React.Component<Props<*, *, *, *>, void> {
   static contextTypes = {
     client: PropTypes.object,
   };
