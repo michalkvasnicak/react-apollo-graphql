@@ -7,6 +7,7 @@ import type {
   ApolloError,
   ApolloExecutionResult,
   ApolloQueryResult,
+  FetchMoreOptions,
   FetchMoreQueryOptions,
   FetchPolicy,
   ModifiableWatchQueryOptions,
@@ -14,6 +15,8 @@ import type {
   ObservableQuery,
   SubscribeToMoreOptions,
   Subscription,
+  UpdateQueryOptions,
+  WatchQueryOptions,
 } from 'apollo-client';
 export type FragmentInitializerResult<T> = ?T | false;
 
@@ -23,10 +26,29 @@ export type QueryResult<T> = ApolloQueryResult<T>;
 export type MutationResult<T> = ApolloExecutionResult<T>;
 export type CurrentQueryResult<T> = {
   data: T,
-  error: $PropertyType<ApolloCurrentResult<T>, 'error'>,
+  error: ?$PropertyType<ApolloCurrentResult<T>, 'error'>,
   loading: $PropertyType<ApolloCurrentResult<T>, 'loading'>,
   networkStatus: $PropertyType<ApolloCurrentResult<T>, 'networkStatus'>,
-  partial: $PropertyType<ApolloCurrentResult<T>, 'partial'>,
+  partial: ?$PropertyType<ApolloCurrentResult<T>, 'partial'>,
+};
+
+export type ReactApolloGraphQLObservableQuery<T> = {
+  options: WatchQueryOptions,
+  queryId: string,
+  variables: {
+    [key: string]: any,
+  },
+  result(): Promise<QueryResult<T>>,
+  currentResult(): CurrentQueryResult<T>,
+  getLastResult(): QueryResult<T>,
+  refetch(variables?: any): Promise<QueryResult<T>>,
+  fetchMore(fetchMoreOptions: FetchMoreQueryOptions & FetchMoreOptions): Promise<QueryResult<T>>,
+  subscribeToMore(options: SubscribeToMoreOptions): () => void,
+  setOptions(opts: ModifiableWatchQueryOptions): Promise<QueryResult<T>>,
+  setVariables(variables: any, tryFetch?: boolean): Promise<QueryResult<T>>,
+  updateQuery(mapFn: (previousQueryResult: any, options: UpdateQueryOptions) => any): void,
+  stopPolling(): void,
+  startPolling(pollInterval: number): void,
 };
 
 /*
@@ -37,7 +59,7 @@ export type ResultTypeToResultObject<T: {}> = {
   error: $PropertyType<CurrentQueryResult<$ObjMap<T, <V>(V) => ?V>>, 'error'>,
   loading: $PropertyType<CurrentQueryResult<$ObjMap<T, <V>(V) => ?V>>, 'loading'>,
   networkStatus: $PropertyType<CurrentQueryResult<$ObjMap<T, <V>(V) => ?V>>, 'networkStatus'>,
-  observer: ObservableQuery<T>,
+  observer: ReactApolloGraphQLObservableQuery<T>,
   partial: $PropertyType<CurrentQueryResult<$ObjMap<T, <V>(V) => ?V>>, 'partial'>,
 };
 

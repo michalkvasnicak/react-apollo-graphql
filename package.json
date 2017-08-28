@@ -1,6 +1,6 @@
 {
   "name": "react-apollo-graphql",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Get rid of decorators and use Apollo GraphQL queries and mutations in the simple and readable way.",
   "keywords": [
     "react",

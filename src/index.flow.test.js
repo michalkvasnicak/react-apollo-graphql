@@ -7,6 +7,7 @@ import type {
   FragmentResult,
   ObservableQuery,
   QueryResult,
+  ReactApolloGraphQLObservableQuery,
   ResultTypeToResultObject,
 } from './types';
 
@@ -94,5 +95,6 @@ import type {
   (uTest1.error: ?Error);
   (uTest1.networkStatus: number);
   (uTest1.partial: ?boolean);
-  (uTest1.observer: ObservableQuery<{ user: { name: string } }>);
+  (uTest1.observer: ReactApolloGraphQLObservableQuery<{ user: { name: string } }>);
+  (uTest1.observer.currentResult().data.user: ?{ name: string });
 })();
